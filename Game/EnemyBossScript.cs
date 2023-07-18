@@ -1,6 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using TMPro;        //TMPを使ってHP表示するため追加
+using UnityEngine.UI;
 //ボスの行動、HPを管理するスクリプト
 public class EnemyBossScript : MonoBehaviour
 {
@@ -25,6 +27,11 @@ public class EnemyBossScript : MonoBehaviour
     private Transform rightwall;
     private Transform leftwall;
 
+    [SerializeField]
+    private GameObject HpCanvas;        //Hpを表示するCanvas
+    [SerializeField]
+    private TextMeshProUGUI hpText;     //現在のHPを表示するテキスト
+
     public EnemyType state;
     //敵の種類
     public enum EnemyType
@@ -42,6 +49,7 @@ public class EnemyBossScript : MonoBehaviour
         isDeath = false;
         y_pos = transform.position.y;   //y座標の初期値を記録
         enemy_rb2d = GetComponent<Rigidbody2D>();
+        HpCanvas.SetActive(false);
         //シーン上のオブジェクトを探し、そのTransform型で受け取る
         rightwall = GameObject.Find("RightWall").transform;
         leftwall = GameObject.Find("LeftWall").transform;
@@ -50,11 +58,13 @@ public class EnemyBossScript : MonoBehaviour
         ImageDir();     //はじめの進行方向を決めておく
         enemy_animator.applyRootMotion = false;
         enemy_animator.SetTrigger("boss_tojo");
+        hpText.text = enemy_hp.ToString("n2");
     }
 
     void Update()
     {
         if(!GameManagement.Instance.now_Gameing) return;    //ゲーム中でなければ処理をしない
+        HPShow();       //HPの表示判定
         EnemyDes();     //敵の消滅判定
         StealthColor(); //ステルスの種類なら姿の出現判定を入れる
     }
@@ -74,6 +84,18 @@ public class EnemyBossScript : MonoBehaviour
     public void HPDown()
     {
         enemy_hp -= 0.01f;
+    }
+
+    public void HPShow()
+    {
+        if(Hiting && !isDeath && enemy_hp > 0){     //光線が当たっているかつ死んでいない時
+            HpCanvas.SetActive(true);
+            hpText.text = enemy_hp.ToString("n2");
+        }
+        else        //当たっていないとき
+        {
+            HpCanvas.SetActive(false);
+        }
     }
 
     void EnemyDes()

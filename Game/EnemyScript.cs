@@ -1,6 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using TMPro;        //TMPを使ってHP表示するため追加
+using UnityEngine.UI;
 //敵のHPを管理するスクリプト
 //敵の移動、種類も管理するスクリプト
 public class EnemyScript : MonoBehaviour
@@ -21,6 +23,11 @@ public class EnemyScript : MonoBehaviour
     private float y_pos;                //y座標の初期値
 
     private Animator enemy_animator;    //敵のアニメーター
+
+    [SerializeField]
+    private GameObject HpCanvas;        //Hpを表示するCanvas
+    [SerializeField]
+    private TextMeshProUGUI hpText;     //現在のHPを表示するテキスト
 
     //移動範囲を示すオブジェクトを格納
     private Transform rightwall;
@@ -45,19 +52,23 @@ public class EnemyScript : MonoBehaviour
         isDeath = false;
         y_pos = transform.position.y;   //y座標の初期値を記録
         enemy_rb2d = GetComponent<Rigidbody2D>();
+        HpCanvas.SetActive(false);
         //シーン上のオブジェクトを探し、そのTransform型で受け取る
         rightwall = GameObject.Find("RightWall").transform;
         leftwall = GameObject.Find("LeftWall").transform;
         enemy_animator = GetComponent<Animator>();
         EnemyTypeJudge();
         ImageDir();     //はじめの進行方向を決めておく
+        hpText.text = enemy_hp.ToString("n2");
     }
 
     //毎フレーム呼び出される
     void Update()
     {
+
         StealthColor(); //ステルスの種類なら姿の出現判定を入れる
         if(!GameManagement.Instance.now_Gameing) return;    //ゲーム中でなければ処理をしない
+        HPShow();
         EnemyDes();     //敵の消滅判定
         //StealthColor(); //ステルスの種類なら姿の出現判定を入れる
     }
@@ -78,11 +89,24 @@ public class EnemyScript : MonoBehaviour
         enemy_hp -= 0.01f;
     }
 
+    public void HPShow()    //HPを表示する機能
+    {
+        if(Hiting && !isDeath && enemy_hp > 0){     //光線が当たっているかつ死んでいない時
+            HpCanvas.SetActive(true);
+            hpText.text = enemy_hp.ToString("n2");  //小数点第2位まで表示
+        }
+        else        //当たっていないとき
+        {
+            HpCanvas.SetActive(false);
+        }
+    }
+
     void EnemyDes()
     {
         //HPが０になったとき敵オブジェクトを消す(３秒後)
         if(enemy_hp <= 0f && isDeath == false)
         {
+            HpCanvas.SetActive(false);
             EnemyManager.Instance.remain_num--;       //残数を減らす
             GameManagement.Instance.RemainTextShow(EnemyManager.Instance.remain_num);   //UIを変化
             DesProcess();
